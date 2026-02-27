@@ -7,16 +7,17 @@ class nodo:
         self.orden = orden
         self.siguiente = None
 
+
 class hotel:
     def __init__(self, total_habitaciones):
-        self.cabeza = None     # Huéspedes actuales
-        self.entradas = None   # Historial total (Libro de entradas)
-        self.salidas = None    # Historial de retiros (Libro de salidas)
+        self.cabeza = None
+        self.entradas = None
+        self.salidas = None
         self.total_habitaciones = total_habitaciones
         self.contador_llegadas = 0 
 
+    # Registro de entrada de huéspedes
     def registro_entrada(self, cedula, nombre, habitacion):
-        # Validar si la habitación está ocupada actualmente
         actual = self.cabeza
         while actual:
             if actual.habitacion == habitacion:
@@ -26,30 +27,27 @@ class hotel:
 
         self.contador_llegadas += 1
         
-        # Insertar en lista de huéspedes activos
         nuevo = nodo(cedula, nombre, habitacion, self.contador_llegadas)
         nuevo.siguiente = self.cabeza
         self.cabeza = nuevo
         
-        # Insertar en libro de entradas (histórico)
         entrada_historial = nodo(cedula, nombre, habitacion, self.contador_llegadas)
         entrada_historial.siguiente = self.entradas
         self.entradas = entrada_historial
         
-        print("Entrada registrada: ", nombre, " en habitación ", habitacion)
+        print("Entrada registrada:", nombre, "en habitación", habitacion)
 
+    # Registro de salida de huéspedes
     def registro_salida(self, cedula):
         actual = self.cabeza
         anterior = None
         
         while actual:
             if actual.cedula == cedula:
-                # 1. Registrar en libro de salidas
                 nueva_salida = nodo(actual.cedula, actual.nombre, actual.habitacion, actual.orden)
                 nueva_salida.siguiente = self.salidas
                 self.salidas = nueva_salida
                 
-                # 2. Eliminar de la lista de activos
                 if anterior:
                     anterior.siguiente = actual.siguiente
                 else:
@@ -63,17 +61,64 @@ class hotel:
         
         print("No se encontró un registro activo para la cédula:", cedula)
 
-    # Consulta Individual por Cédula
+    # Consulta individual por cédula
     def consultar_por_cedula(self, cedula):
         actual = self.cabeza
         while actual:
             if actual.cedula == cedula:
-                print("Huésped:", actual.nombre, "| Habitación:", actual.habitacion)
+                print("Cédula:", actual.cedula)
+                print("Nombre:", actual.nombre)
+                print("Habitación:", actual.habitacion)
+                print("Orden de llegada:", actual.orden)
                 return
             actual = actual.siguiente
         print("No se encontró el huésped.")
 
-    # Consulta de Habitaciones Disponibles
+    # Consulta total por cédula
+    def consulta_total_por_cedula(self):
+        actual_externo = self.cabeza
+
+        while actual_externo:
+            menor = None
+            actual = self.cabeza
+
+            while actual:
+                if actual.cedula >= actual_externo.cedula:
+                    if menor is None or actual.cedula < menor.cedula:
+                        menor = actual
+                actual = actual.siguiente
+
+            if menor:
+                print("Cédula:", menor.cedula,
+                      "| Nombre:", menor.nombre,
+                      "| Habitación:", menor.habitacion,
+                      "| Orden:", menor.orden)
+
+            actual_externo = actual_externo.siguiente
+
+    # Consulta total por orden de llegada
+    def consulta_total_por_orden(self):
+        actual_externo = self.cabeza
+
+        while actual_externo:
+            menor = None
+            actual = self.cabeza
+
+            while actual:
+                if actual.orden >= actual_externo.orden:
+                    if menor is None or actual.orden < menor.orden:
+                        menor = actual
+                actual = actual.siguiente
+
+            if menor:
+                print("Orden:", menor.orden,
+                      "| Cédula:", menor.cedula,
+                      "| Nombre:", menor.nombre,
+                      "| Habitación:", menor.habitacion)
+
+            actual_externo = actual_externo.siguiente
+
+    # Consulta de habitaciones disponibles
     def consultar_disponibles(self):
         print("Habitaciones libres:")
         for i in range(1, self.total_habitaciones + 1):
@@ -87,7 +132,7 @@ class hotel:
             if not ocupada:
                 print("- Habitación", i)
 
-    # Consulta de Habitaciones Ocupadas
+    # Consulta de habitaciones ocupadas
     def consultar_ocupadas(self):
         print("Habitaciones ocupadas:")
         actual = self.cabeza

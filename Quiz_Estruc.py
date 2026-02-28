@@ -7,7 +7,6 @@ class nodo:
         self.orden = orden
         self.siguiente = None
 
-
 class hotel:
     def __init__(self, total_habitaciones):
         self.cabeza = None
@@ -15,129 +14,140 @@ class hotel:
         self.salidas = None
         self.total_habitaciones = total_habitaciones
         self.contador_llegadas = 0 
-
-    # Registro de entrada de huéspedes
+        
     def registro_entrada(self, cedula, nombre, habitacion):
+        if habitacion < 1:
+            print("Error: El número de habitación no puede ser menor a 1.")
+            return
+        if habitacion > self.total_habitaciones:
+            print("Error: El hotel solo tiene", self.total_habitaciones, "habitaciones.")
+            return
+
         actual = self.cabeza
         while actual:
             if actual.habitacion == habitacion:
-                print("La habitación", habitacion, "está ocupada.")
+                print("La habitación", habitacion, "ya se encuentra ocupada por otro cliente.")
                 return
             actual = actual.siguiente
-
-        self.contador_llegadas += 1
+        
+        print("Habitación disponible. Procediendo con el registro...")
+        self.contador_llegadas = self.contador_llegadas + 1
         
         nuevo = nodo(cedula, nombre, habitacion, self.contador_llegadas)
         nuevo.siguiente = self.cabeza
         self.cabeza = nuevo
         
-        entrada_historial = nodo(cedula, nombre, habitacion, self.contador_llegadas)
-        entrada_historial.siguiente = self.entradas
-        self.entradas = entrada_historial
+        historial = nodo(cedula, nombre, habitacion, self.contador_llegadas)
+        historial.siguiente = self.entradas
+        self.entradas = historial
         
-        print("Entrada registrada:", nombre, "en habitación", habitacion)
-
-    # Registro de salida de huéspedes
+        print("Registro completado con éxito.")
+        print("Huésped:", nombre, "| Cédula:", cedula, "| Habitación:", habitacion)
+     
     def registro_salida(self, cedula):
+        print("Buscando registro de salida para la cédula:", cedula)
         actual = self.cabeza
         anterior = None
+        encontrado = False
         
         while actual:
             if actual.cedula == cedula:
-                nueva_salida = nodo(actual.cedula, actual.nombre, actual.habitacion, actual.orden)
-                nueva_salida.siguiente = self.salidas
-                self.salidas = nueva_salida
+                encontrado = True
+                print("Huésped localizado. Generando registro en el libro de salidas...")
                 
+                salida = nodo(actual.cedula, actual.nombre, actual.habitacion, actual.orden)
+                salida.siguiente = self.salidas
+                self.salidas = salida
+
                 if anterior:
                     anterior.siguiente = actual.siguiente
                 else:
                     self.cabeza = actual.siguiente
                 
-                print("Salida registrada para:", actual.nombre)
+                print("El huésped", actual.nombre, "ha dejado la habitación", actual.habitacion)
                 return
             
             anterior = actual
             actual = actual.siguiente
         
-        print("No se encontró un registro activo para la cédula:", cedula)
+        if encontrado == False:
+            print("No se encontró ningún registro activo con esa cédula en el hotel.")
 
-    # Consulta individual por cédula
-    def consultar_por_cedula(self, cedula):
+    def consulta_individual(self, cedula):
+        print("Consultando información individual del cliente...")
         actual = self.cabeza
         while actual:
             if actual.cedula == cedula:
-                print("Cédula:", actual.cedula)
-                print("Nombre:", actual.nombre)
-                print("Habitación:", actual.habitacion)
-                print("Orden de llegada:", actual.orden)
+                print("Nombre Completo:", actual.nombre)
+                print("Número de Cédula:", actual.cedula)
+                print("Número de Habitación:", actual.habitacion)
+                print("Turno de Llegada:", actual.orden)
                 return
             actual = actual.siguiente
-        print("No se encontró el huésped.")
+        print("Error: El cliente con cédula", cedula, "no está registrado actualmente :).")
 
-    # Consulta total por cédula
-    def consulta_total_por_cedula(self):
-        actual_externo = self.cabeza
-
-        while actual_externo:
-            menor = None
-            actual = self.cabeza
-
-            while actual:
-                if actual.cedula >= actual_externo.cedula:
-                    if menor is None or actual.cedula < menor.cedula:
-                        menor = actual
-                actual = actual.siguiente
-
-            if menor:
-                print("Cédula:", menor.cedula,
-                      "| Nombre:", menor.nombre,
-                      "| Habitación:", menor.habitacion,
-                      "| Orden:", menor.orden)
-
-            actual_externo = actual_externo.siguiente
-
-    # Consulta total por orden de llegada
-    def consulta_total_por_orden(self):
-        actual_externo = self.cabeza
-
-        while actual_externo:
-            menor = None
-            actual = self.cabeza
-
-            while actual:
-                if actual.orden >= actual_externo.orden:
-                    if menor is None or actual.orden < menor.orden:
-                        menor = actual
-                actual = actual.siguiente
-
-            if menor:
-                print("Orden:", menor.orden,
-                      "| Cédula:", menor.cedula,
-                      "| Nombre:", menor.nombre,
-                      "| Habitación:", menor.habitacion)
-
-            actual_externo = actual_externo.siguiente
-
-    # Consulta de habitaciones disponibles
-    def consultar_disponibles(self):
-        print("Habitaciones libres:")
-        for i in range(1, self.total_habitaciones + 1):
-            ocupada = False
-            actual = self.cabeza
-            while actual:
-                if actual.habitacion == i:
-                    ocupada = True
-                    break
-                actual = actual.siguiente
-            if not ocupada:
-                print("- Habitación", i)
-
-    # Consulta de habitaciones ocupadas
-    def consultar_ocupadas(self):
-        print("Habitaciones ocupadas:")
+    def consulta_total_orden(self):
         actual = self.cabeza
-        if not actual:
-            print("No hay habitaciones ocupadas.")
+        if actual == None:
+            print("El hotel se encuentra vacío en este momento.")
+            return
+            
+        print("Listado de Huéspedes Vigentes:")
         while actual:
-            print("- Habitación", actual.habitacion, "por", actual.nombre)
+            print("Orden:", actual.orden)
+            print("Nombre:", actual.nombre)
+            print("Cédula:", actual.cedula)
+            print("Habitación:", actual.habitacion)
+            actual = actual.siguiente
+        print("Fin del reporte.")
+
+    def consulta_total_cedula(self):
+        actual_externo = self.cabeza
+        if actual_externo == None:
+            print("No hay datos para mostrar.")
+            return
+
+        while actual_externo:
+            menor_nodo = None
+            recorrido = self.cabeza
+            while recorrido:
+                if recorrido.cedula >= actual_externo.cedula:
+                    if menor_nodo == None or recorrido.cedula < menor_nodo.cedula:
+                        menor_nodo = recorrido
+                recorrido = recorrido.siguiente
+            
+            if menor_nodo:
+                print("Cédula:", menor_nodo.cedula, "| Huésped:", menor_nodo.nombre, "| Habitación:", menor_nodo.habitacion)
+            
+            actual_externo = actual_externo.siguiente
+        print("Reporte finalizado.")
+
+    def consultar_disponibles(self):
+        habitaciones_libres = 0
+        for i in range(1, self.total_habitaciones + 1):
+            esta_ocupada = False
+            temp = self.cabeza
+            while temp:
+                if temp.habitacion == i:
+                    esta_ocupada = True
+                    break
+                temp = temp.siguiente
+            
+            if esta_ocupada == False:
+                print("La habitación número", i, "está LIBRE.")
+                habitaciones_libres = habitaciones_libres + 1
+        
+        print("Total de habitaciones disponibles:", habitaciones_libres)
+
+    def consultar_ocupadas(self):
+        actual = self.cabeza
+        if actual == None:
+            print("No hay habitaciones ocupadas en este momento.")
+            return
+            
+        while actual:
+            print("Habitación:", actual.habitacion)
+            print("  -> Nombre:", actual.nombre)
+            print("  -> Cédula:", actual.cedula)
+            print("  -> Orden:", actual.orden)
             actual = actual.siguiente
